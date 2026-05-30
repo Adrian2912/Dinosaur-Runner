@@ -1,0 +1,2 @@
+This is a simple game where you have a purple ball and obstacles are coming in it's way the purple ball has to avoid the obstacles by jumping above them or ducking below them. 
+For each avoided obstacle the player will get one point. If the player hits an obstacle the game will end and the player has the option to start a new game. This is a remake of the google's t-rex game, a game that occurs when the user isn't connected to the internet.
