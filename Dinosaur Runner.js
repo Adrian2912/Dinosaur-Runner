@@ -1,13 +1,17 @@
 let isJumping, spawningInterval, speed, score = 0, timer, seconds, minutes, ballDestroyed;
-const times = document.querySelectorAll("span"), edge = 2100;
-for (let i = 0; i < 100; ++i) {
-    let star = document.createElement("div");
-    document.getElementById("sky").appendChild(star);
-    star.classList.add("star");
-    star.style.top = `${Math.floor(Math.random() * 100)}%`;
-    star.style.right = `${Math.floor(Math.random() * 100)}%`;
-}
+const times = document.querySelectorAll("span");
 startGame();
+generateStars();
+
+function generateStars() {
+    for (let i = 0; i < 100; ++i) {
+        let star = document.createElement("div");
+        document.getElementById("sky").appendChild(star);
+        star.classList.add("star");
+        star.style.top = `${Math.floor(Math.random() * 100)}%`;
+        star.style.right = `${Math.floor(Math.random() * 100)}%`;
+    }
+}
 
 function startGame() {
     seconds = 0;
@@ -93,9 +97,10 @@ function rise() {
 
 function obstacleMovement(timestamp, obstacle, distance) {
     if (!ballDestroyed) {
-        if (distance < edge) {
+        const offset = 100, screenEdge = 2100;
+        if (distance < screenEdge) {
             distance += speed;
-            obstacle.style.right = `${distance - 100}px`;
+            obstacle.style.right = `${distance - offset}px`;
             checkCollisionBetweenBallAndObstacle(obstacle);
             requestAnimationFrame((timestamp) => obstacleMovement(timestamp, obstacle, distance));
         } else {
@@ -108,11 +113,12 @@ function obstacleMovement(timestamp, obstacle, distance) {
 
 function spawnObstacle() {
     if (!ballDestroyed) {
-        let obstacle = document.createElement("div"), distance = 0, surface = Math.floor(Math.random() * (32 - 23.8 + 1) + 23.8);
+        const minimumGenerationHeight = 23.8, maximumGenerationHeight = 32, minimumObstacleSize = 20, maximumObstacleSize = 80;
+        let obstacle = document.createElement("div"), distance = 0, surface = Math.floor(Math.random() * (maximumGenerationHeight - minimumGenerationHeight + 1) + minimumGenerationHeight);
         document.getElementById("gameScreen").appendChild(obstacle);
         obstacle.classList.add("obstacle");
-        obstacle.style.width = `${Math.floor(Math.random() * (80 - 20 + 1) + 20)}px`;
-        obstacle.style.height = `${Math.floor(Math.random() * (80 - 20 + 1) + 20)}px`;
+        obstacle.style.width = `${Math.floor(Math.random() * (maximumObstacleSize - minimumObstacleSize + 1) + minimumObstacleSize)}px`;
+        obstacle.style.height = `${Math.floor(Math.random() * (maximumObstacleSize - minimumGenerationHeight + 1) + minimumObstacleSize)}px`;
         obstacle.style.bottom = `${surface}%`; 
         requestAnimationFrame((timestamp) => obstacleMovement(timestamp, obstacle, distance));
         obstaclesSpawnRate = setTimeout(spawnObstacle, spawningInterval);
@@ -122,21 +128,29 @@ function spawnObstacle() {
 function checkCollisionBetweenBallAndObstacle(obstacle) {
     let obstacleCoordinates = obstacle.getBoundingClientRect();
     let ballCoordinates = document.getElementById("purpleBall").getBoundingClientRect();
-    if ((ballCoordinates.x >= obstacleCoordinates.left && ballCoordinates.x <= obstacleCoordinates.right)  && (ballCoordinates.bottom >= obstacleCoordinates.top && ballCoordinates.top <= obstacleCoordinates.bottom)) {
-        ballDestroyed = true;
-        let destroyedBall = document.getElementById("purpleBall");
-        if (isJumping) {
-            destroyedBall.classList.remove("jumping");
-            isJumping = false;
-        }
-        destroyedBall.removeEventListener("keydown", ballControls);
-        destroyedBall.removeEventListener("keyup", rise);
-        document.getElementById("gameScreen").removeChild(destroyedBall);
-        clearInterval(timer);
-        clearTimeout(obstaclesSpawnRate);
-        createGameOverScreen();
+    if (isColiding(ballCoordinates, obstacleCoordinates)) {
+        endTheGame();
     } 
 } 
+
+function isColiding(ballCoordinates, obstacleCoordinates) {
+    return (ballCoordinates.x >= obstacleCoordinates.left && ballCoordinates.x <= obstacleCoordinates.right)  && (ballCoordinates.bottom >= obstacleCoordinates.top && ballCoordinates.top <= obstacleCoordinates.bottom);
+}
+
+function endTheGame() {
+    ballDestroyed = true;
+    let destroyedBall = document.getElementById("purpleBall");
+    if (isJumping) {
+        destroyedBall.classList.remove("jumping");
+        isJumping = false;
+    }
+    destroyedBall.removeEventListener("keydown", ballControls);
+    destroyedBall.removeEventListener("keyup", rise);
+    document.getElementById("gameScreen").removeChild(destroyedBall);
+    clearInterval(timer);
+    clearTimeout(obstaclesSpawnRate);
+    createGameOverScreen();
+}
 
 function createGameOverScreen() {
     let gameOverScreen = document.createElement("div");
